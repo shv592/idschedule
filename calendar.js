@@ -40,7 +40,7 @@ function generateCalendar(year, month, events, weekendEvents) {
             const day = date.getDate();
             cell.textContent = day;
 
-            const eventKey = `${year}-${month + 1}-${day}`;
+            const eventKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             if (events[eventKey]) {
                 events[eventKey].forEach(({ label, name }) => {
                     if (name) {
@@ -49,11 +49,11 @@ function generateCalendar(year, month, events, weekendEvents) {
                 });
             }
 
-            const weekendKey = `${year}-${month + 1}-${day}`;
+            const weekendKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             if (weekendEvents[weekendKey]) {
                 weekendEvents[weekendKey].forEach(({ label, name }) => {
                     if (name) {
-                        cell.innerHTML += `<div class="event citywide">${name}</div>`;
+                        cell.innerHTML += `<div class="event weekend">${name}</div>`;
                     }
                 });
             }
@@ -91,38 +91,42 @@ async function fetchEvents() {
 
         rows.slice(1).forEach(row => {
             // Extract relevant columns
-            const [startDate, endDate, ruhNames, sphNames, , , , weekendStartDate, weekendEndDate, , , , , cityWide] = row.slice(7, 15); // Adjust for columns H to P
+            const [startDate, endDate, ruhNames, sphSchNames, , , , weekendStartDate, weekendEndDate, , , , cityWide] = row.slice(7, 15); // Adjust for columns H to P
 
-            console.log('Processing row:', row); // Log each row for debugging
+            // Convert date strings to Date objects
+            const parseDate = dateStr => {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return new Date(year, month - 1, day);
+            };
 
             // Handle weekday events
             if (startDate && endDate) {
-                const start = new Date(startDate);
-                const end = new Date(endDate);
+                const start = parseDate(startDate);
+                const end = parseDate(endDate);
                 for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
-                    const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     if (!events[key]) {
                         events[key] = [];
                     }
                     if (ruhNames) {
                         events[key].push({ label: 'ruh', name: ruhNames });
                     }
-                    if (sphNames) {
-                        events[key].push({ label: 'sph', name: sphNames });
+                    if (sphSchNames) {
+                        events[key].push({ label: 'sph', name: sphSchNames });
                     }
                 }
             }
 
             // Handle weekend events
             if (weekendStartDate && weekendEndDate && cityWide) {
-                const weekendStart = new Date(weekendStartDate);
-                const weekendEnd = new Date(weekendEndDate);
+                const weekendStart = parseDate(weekendStartDate);
+                const weekendEnd = parseDate(weekendEndDate);
                 for (let d = weekendStart; d <= weekendEnd; d.setDate(d.getDate() + 1)) {
-                    const key = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     if (!weekendEvents[key]) {
                         weekendEvents[key] = [];
                     }
-                    weekendEvents[key].push({ label: 'citywide', name: cityWide });
+                    weekendEvents[key].push({ label: 'weekend', name: cityWide });
                 }
             }
         });

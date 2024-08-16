@@ -1,114 +1,94 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
+/* General calendar styling */
 .calendar-container {
-    width: 90%;
-    max-width: 900px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 0 auto;
     padding: 20px;
+    font-family: Arial, sans-serif;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .header button {
     padding: 10px 20px;
-    font-size: 16px;
-    background-color: #007bff;
-    color: #ffffff;
     border: none;
-    border-radius: 8px;
+    background-color: #007BFF;
+    color: white;
+    font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .header button:hover {
     background-color: #0056b3;
-    transform: scale(1.05);
 }
 
-.header h1 {
-    margin: 0;
-    font-size: 28px;
-    color: #333333;
+.header button:active {
+    transform: scale(0.95);
 }
 
-/* Calendar Styles */
 .calendar {
     width: 100%;
     border-collapse: collapse;
-    background-color: #ffffff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
 }
 
 .calendar th,
 .calendar td {
-    border: 1px solid #e0e0e0;
-    padding: 15px;
-    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    height: 100px;
     vertical-align: top;
-}
-
-.calendar th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-    color: #6c757d;
-}
-
-.calendar td {
-    height: 120px;
     position: relative;
 }
 
-/* Event Styles */
+.calendar th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.calendar td {
+    background-color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.calendar td:hover {
+    background-color: #f0f8ff;
+}
+
 .event {
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 14px;
-    margin: 4px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 5px;
+    border-radius: 5px;
+    margin: 2px 0;
+    font-size: 12px;
+    color: #fff;
 }
 
 .event.ruh {
-    background-color: #ff9999; /* Light red */
-    color: #d9534f; /* Dark red */
+    background-color: #28a745; /* Green for RUH */
 }
 
 .event.sph {
-    background-color: #99cc99; /* Light green */
-    color: #3c763d; /* Dark green */
+    background-color: #17a2b8; /* Teal for SPH */
 }
 
 .event.citywide {
-    background-color: #66ccff; /* Light blue */
-    color: #0056b3; /* Dark blue */
+    background-color: #ffc107; /* Yellow for CityWide */
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header button {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
+.event.ruh::before {
+    content: "RUH: ";
+}
 
-    .header h1 {
-        font-size: 24px;
-    }
+.event.sph::before {
+    content: "SPH: ";
+}
+
+.event.citywide::before {
+    content: "CityWide: ";
 }
