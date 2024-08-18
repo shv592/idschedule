@@ -2,21 +2,21 @@
 .calendar-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
+    padding: 10px;
+    font-family: sans-serif;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
 .header button {
     padding: 10px 20px;
     border: none;
-    background-color: #007BFF;
+    background-color: #016d5b;
     color: white;
     font-size: 16px;
     cursor: pointer;
@@ -25,7 +25,7 @@
 }
 
 .header button:hover {
-    background-color: #0056b3;
+    background-color: #01856f;
 }
 
 .header button:active {
@@ -40,7 +40,7 @@
 
 .calendar th,
 .calendar td {
-    padding: 10px;
+    padding: 9px;
     border: 1px solid #ddd;
     height: 100px;
     vertical-align: top;
@@ -61,34 +61,39 @@
     background-color: #f0f8ff;
 }
 
+/* Highlight weekends with a lighter grey background */
+.calendar td.weekend {
+    background-color: #f0f0f0; /* Light grey for weekends */
+}
+
 .event {
     padding: 5px;
     border-radius: 5px;
-    margin: 2px 0;
+    margin: 1px 0;
     font-size: 12px;
     color: #fff;
 }
 
-.event.ruh {
-    background-color: #28a745; /* Green for RUH */
+.event.ruhNames {
+    background-color: #cc2271; /* Pink for RUH */
 }
 
-.event.sph {
-    background-color: #17a2b8; /* Teal for SPH */
+.event.sphSchNames {
+    background-color: #0499c2; /* Teal for SPH */
 }
 
-.event.citywide {
-    background-color: #ffc107; /* Yellow for CityWide */
+.event.cityWide {
+    background-color: #e5b000; /* Yellow for CityWide */
 }
 
-.event.ruh::before {
+.event.ruhNames::before {
     content: "RUH: ";
 }
 
-.event.sph::before {
-    content: "SPH: ";
+.event.sphSchNames::before {
+    content: "SPH/SCH: ";
 }
 
-.event.citywide::before {
-    content: "CityWide: ";
+.event.cityWide::before {
+    content: "City Wide: ";
 }

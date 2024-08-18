@@ -9,24 +9,31 @@ function generateCalendar(year, month, events, weekendEvents) {
 
     // Calculate the first Monday and last Sunday of the month
     const firstDayOfMonth = new Date(year, month, 1);
+    console.log('First day of month:', firstDayOfMonth);
+    
     const firstMonday = new Date(firstDayOfMonth);
     while (firstMonday.getDay() !== 1) {
         firstMonday.setDate(firstMonday.getDate() - 1);
     }
+    console.log('First Monday of month:', firstMonday);
 
     const lastDayOfMonth = new Date(year, month + 1, 0);
+    console.log('Last day of month:', lastDayOfMonth);
+    
     const lastSunday = new Date(lastDayOfMonth);
     while (lastSunday.getDay() !== 0) {
         lastSunday.setDate(lastSunday.getDate() + 1);
     }
+    console.log('Last Sunday of month:', lastSunday);
 
     // Fill calendar with empty days before the first Monday
     const days = [];
-    let currentDate = firstMonday;
+    let currentDate = new Date(firstMonday); // Clone to avoid modifying the original
     while (currentDate <= lastSunday) {
         days.push(new Date(currentDate));
         currentDate.setDate(currentDate.getDate() + 1);
     }
+    console.log('Days in calendar:', days);
 
     let row = document.createElement('tr');
     days.forEach((date, index) => {
@@ -40,20 +47,28 @@ function generateCalendar(year, month, events, weekendEvents) {
             const day = date.getDate();
             cell.textContent = day;
 
-            const eventKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            if (events[eventKey]) {
-                events[eventKey].forEach(({ label, name }) => {
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            console.log('Processing date:', key);
+            
+            // Add weekend class based on the day of the week
+            if (date.getDay() === 0 || date.getDay() === 6) { // 0 = Sunday, 6 = Saturday
+                cell.classList.add('weekend');
+            }
+
+            // Display weekday events
+            if (events[key]) {
+                events[key].forEach(({ label, name }) => {
                     if (name) {
                         cell.innerHTML += `<div class="event ${label}">${name}</div>`;
                     }
                 });
             }
 
-            const weekendKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            if (weekendEvents[weekendKey]) {
-                weekendEvents[weekendKey].forEach(({ label, name }) => {
+            // Display weekend events
+            if (weekendEvents[key]) {
+                weekendEvents[key].forEach(({ label, name }) => {
                     if (name) {
-                        cell.innerHTML += `<div class="event weekend">${name}</div>`;
+                        cell.innerHTML += `<div class="event ${label}">${name}</div>`;
                     }
                 });
             }
@@ -79,59 +94,72 @@ function getMonthName(monthIndex) {
 // Fetch data from Google Sheets as CSV
 async function fetchEvents() {
     try {
-        const response = await fetch('https://docs.google.com/spreadsheets/d/1k-j85Yo2CBqX21myqZJKjnbsPs3ovmUATkhDlLICzNQ/pub?gid=0&single=true&output=csv');
+        const response = await fetch('https://docs.google.com/spreadsheets/d/1k-j85Yo2CBqX21myqZJKjnbsPs3ovmUATkhDlLICzNQ/pub?gid=68209812&single=true&output=csv');
         const text = await response.text();
-        console.log('Fetched CSV data:', text); // Log the raw CSV data to check
-
         const rows = text.split('\n').map(row => row.split(','));
-        console.log('Parsed rows:', rows); // Log the parsed rows to check
 
         const events = {};
         const weekendEvents = {};
 
         rows.slice(1).forEach(row => {
             // Extract relevant columns
-            const [startDate, endDate, ruhNames, sphSchNames, , , , weekendStartDate, weekendEndDate, , , , cityWide] = row.slice(7, 15); // Adjust for columns H to P
+            const [startDateStr, endDateStr, ruhNames, sphSchNames, weekendStartDateStr, weekendEndDateStr, cityWide] = row.slice(0, 7);
 
-            // Convert date strings to Date objects
-            const parseDate = dateStr => {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                return new Date(year, month - 1, day);
-            };
+            console.log('Processing row:', row);
+            console.log('Start Date:', startDateStr, 'End Date:', endDateStr, 'Weekend Start Date:', weekendStartDateStr, 'Weekend End Date:', weekendEndDateStr, 'Ruh Names:', ruhNames, 'Sph Sch Names:', sphSchNames, 'City Wide:', cityWide);
 
-            // Handle weekday events
+            // Convert strings to dates and set time to 00:00:00
+            const startDate = new Date(startDateStr);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(endDateStr);
+            endDate.setHours(0, 0, 0, 0);
+
+            console.log('Parsed start date:', startDate, 'Parsed end date:', endDate);
+
+            // Handle weekday events (startDate to endDate)
             if (startDate && endDate) {
-                const start = parseDate(startDate);
-                const end = parseDate(endDate);
-                for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
                     if (!events[key]) {
                         events[key] = [];
                     }
+                    
+                    // Push ruhNames and sphSchNames to the corresponding date
                     if (ruhNames) {
-                        events[key].push({ label: 'ruh', name: ruhNames });
+                        events[key].push({ label: 'ruhNames', name: ruhNames });
                     }
                     if (sphSchNames) {
-                        events[key].push({ label: 'sph', name: sphSchNames });
+                        events[key].push({ label: 'sphSchNames', name: sphSchNames });
                     }
                 }
             }
 
-            // Handle weekend events
+            // Convert strings to dates and set time to 00:00:00
+            const weekendStartDate = new Date(weekendStartDateStr);
+            weekendStartDate.setHours(0, 0, 0, 0);
+            const weekendEndDate = new Date(weekendEndDateStr);
+            weekendEndDate.setHours(0, 0, 0, 0);
+
+            console.log('Parsed weekend start date:', weekendStartDate, 'Parsed weekend end date:', weekendEndDate);
+
+            // Handle weekend events (weekendStartDate to weekendEndDate)
             if (weekendStartDate && weekendEndDate && cityWide) {
-                const weekendStart = parseDate(weekendStartDate);
-                const weekendEnd = parseDate(weekendEndDate);
-                for (let d = weekendStart; d <= weekendEnd; d.setDate(d.getDate() + 1)) {
+                for (let d = new Date(weekendStartDate); d <= weekendEndDate; d.setDate(d.getDate() + 1)) {
                     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
                     if (!weekendEvents[key]) {
                         weekendEvents[key] = [];
                     }
-                    weekendEvents[key].push({ label: 'weekend', name: cityWide });
+                    
+                    // Push cityWide event to the corresponding weekend date
+                    weekendEvents[key].push({ label: 'cityWide', name: cityWide });
                 }
             }
         });
 
-        console.log('Events data:', { events, weekendEvents }); // Log the final data structure to check
+        console.log('Events:', events);
+        console.log('Weekend Events:', weekendEvents);
 
         return { events, weekendEvents };
     } catch (error) {
