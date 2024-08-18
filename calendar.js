@@ -1,5 +1,7 @@
-let currentYear = 2024;
-let currentMonth = 7; // 0-based index for August
+// Initialize with the current date
+const today = new Date();
+let currentYear = today.getFullYear();
+let currentMonth = today.getMonth(); // 0-based index for months
 
 // Function to generate the calendar
 function generateCalendar(year, month, events, weekendEvents) {
