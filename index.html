@@ -7,13 +7,15 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="calendar-container">
+    
+    <div class="calendar-container" id="calendar-container">
         <div class="header">
             <button id="prev-month">Previous</button>
-            <h1 id="month-year"></h1>
+            <h3 id="month-year"></h3>
             <button id="next-month">Next</button>
+            <button id="toggle-view">Show Table</button> <!-- Toggle view button -->
         </div>
-        <table class="calendar">
+        <table class="calendar" id="calendar-view">
             <thead>
                 <tr>
                     <th>Mon</th>
@@ -26,6 +28,17 @@
                 </tr>
             </thead>
             <tbody id="calendar-body"></tbody>
+        </table>
+        <table class="table-view" id="table-view">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>RUH Names</th>
+                    <th>SPH/SCH Names</th>
+                    <th>City Wide</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
         </table>
     </div>
     <script src="calendar.js"></script>

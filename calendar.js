@@ -1,5 +1,6 @@
 // Initialize with the current date
 const today = new Date();
+today.setHours(0, 0, 0, 0); // Set the time to 00:00:00 for accurate comparison
 let currentYear = today.getFullYear();
 let currentMonth = today.getMonth(); // 0-based index for months
 
@@ -11,22 +12,16 @@ function generateCalendar(year, month, events, weekendEvents) {
 
     // Calculate the first Monday and last Sunday of the month
     const firstDayOfMonth = new Date(year, month, 1);
-    console.log('First day of month:', firstDayOfMonth);
-    
     const firstMonday = new Date(firstDayOfMonth);
     while (firstMonday.getDay() !== 1) {
         firstMonday.setDate(firstMonday.getDate() - 1);
     }
-    console.log('First Monday of month:', firstMonday);
 
     const lastDayOfMonth = new Date(year, month + 1, 0);
-    console.log('Last day of month:', lastDayOfMonth);
-    
     const lastSunday = new Date(lastDayOfMonth);
     while (lastSunday.getDay() !== 0) {
         lastSunday.setDate(lastSunday.getDate() + 1);
     }
-    console.log('Last Sunday of month:', lastSunday);
 
     // Fill calendar with empty days before the first Monday
     const days = [];
@@ -35,7 +30,6 @@ function generateCalendar(year, month, events, weekendEvents) {
         days.push(new Date(currentDate));
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    console.log('Days in calendar:', days);
 
     let row = document.createElement('tr');
     days.forEach((date, index) => {
@@ -50,8 +44,12 @@ function generateCalendar(year, month, events, weekendEvents) {
             cell.textContent = day;
 
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            console.log('Processing date:', key);
-            
+
+            // Highlight today's date (comparing full date)
+            if (date.getTime() === today.getTime()) {
+                cell.classList.add('highlight-today');
+            }
+
             // Add weekend class based on the day of the week
             if (date.getDay() === 0 || date.getDay() === 6) { // 0 = Sunday, 6 = Saturday
                 cell.classList.add('weekend');
@@ -87,14 +85,89 @@ function generateCalendar(year, month, events, weekendEvents) {
     monthYear.textContent = `${getMonthName(month)} ${year}`;
 }
 
+// Function to generate the table view
+function generateTable(events, weekendEvents) {
+    const tableBody = document.getElementById('table-body');
+    tableBody.innerHTML = ''; // Clear previous table data
+
+    // Collect all keys (dates) and sort them
+    const allKeys = Object.keys(events).concat(Object.keys(weekendEvents));
+    const sortedKeys = [...new Set(allKeys)].sort();
+
+    // Filter dates to only include those within the current month
+    const startDate = new Date(currentYear, currentMonth, 1);
+    const endDate = new Date(currentYear, currentMonth + 1, 0);
+
+    sortedKeys.forEach(key => {
+        const [year, month, day] = key.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+
+
+
+        if (date >= startDate && date <= endDate) {
+            const row = document.createElement('tr');
+    
+           
+
+            // Highlight today's date (comparing full date)
+            if (date.getTime() === today.getTime()) {
+                row.classList.add('highlight-today-row');
+            }
+           
+    
+            // Add weekend class if the date is a weekend
+            if (date.getDay() === 0 || date.getDay() === 6) { // 0 = Sunday, 6 = Saturday
+                row.classList.add('weekend');
+            }
+
+
+            // Date Cell
+            const dateCell = document.createElement('td');
+            dateCell.textContent = formatDate(date); // Format date using the existing formatDate function
+            row.appendChild(dateCell);
+
+            // RUH Names Cell
+            const ruhCell = document.createElement('td');
+            ruhCell.textContent = (events[key] || []).filter(e => e.label === 'ruhNames').map(e => e.name).join(', ');
+            row.appendChild(ruhCell);
+
+            // SPH/SCH Names Cell
+            const sphSchCell = document.createElement('td');
+            sphSchCell.textContent = (events[key] || []).filter(e => e.label === 'sphSchNames').map(e => e.name).join(', ');
+            row.appendChild(sphSchCell);
+
+            // Weekend Events Cell
+            const weekendCell = document.createElement('td');
+            weekendCell.textContent = (weekendEvents[key] || []).filter(e => e.label === 'cityWide').map(e => e.name).join(', ');
+            row.appendChild(weekendCell);
+
+
+            tableBody.appendChild(row);
+        }
+    });
+}
+
+// Function to format date as "Day, number Month year"
+function formatDate(date) {
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    const dayOfMonth = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+
+    return `${dayOfWeek}, ${dayOfMonth} ${month} ${year}`;
+}
+
 // Function to get month name
 function getMonthName(monthIndex) {
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     return months[monthIndex];
 }
 
-// Fetch data from Google Sheets as CSV
 async function fetchEvents() {
+    console.log('Fetching events...');
     try {
         const response = await fetch('https://docs.google.com/spreadsheets/d/1k-j85Yo2CBqX21myqZJKjnbsPs3ovmUATkhDlLICzNQ/pub?gid=68209812&single=true&output=csv');
         const text = await response.text();
@@ -104,19 +177,16 @@ async function fetchEvents() {
         const weekendEvents = {};
 
         rows.slice(1).forEach(row => {
+            console.log('Processing row:', row);
+
             // Extract relevant columns
             const [startDateStr, endDateStr, ruhNames, sphSchNames, weekendStartDateStr, weekendEndDateStr, cityWide] = row.slice(0, 7);
-
-            console.log('Processing row:', row);
-            console.log('Start Date:', startDateStr, 'End Date:', endDateStr, 'Weekend Start Date:', weekendStartDateStr, 'Weekend End Date:', weekendEndDateStr, 'Ruh Names:', ruhNames, 'Sph Sch Names:', sphSchNames, 'City Wide:', cityWide);
 
             // Convert strings to dates and set time to 00:00:00
             const startDate = new Date(startDateStr);
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(endDateStr);
             endDate.setHours(0, 0, 0, 0);
-
-            console.log('Parsed start date:', startDate, 'Parsed end date:', endDate);
 
             // Handle weekday events (startDate to endDate)
             if (startDate && endDate) {
@@ -126,7 +196,7 @@ async function fetchEvents() {
                     if (!events[key]) {
                         events[key] = [];
                     }
-                    
+
                     // Push ruhNames and sphSchNames to the corresponding date
                     if (ruhNames) {
                         events[key].push({ label: 'ruhNames', name: ruhNames });
@@ -143,8 +213,6 @@ async function fetchEvents() {
             const weekendEndDate = new Date(weekendEndDateStr);
             weekendEndDate.setHours(0, 0, 0, 0);
 
-            console.log('Parsed weekend start date:', weekendStartDate, 'Parsed weekend end date:', weekendEndDate);
-
             // Handle weekend events (weekendStartDate to weekendEndDate)
             if (weekendStartDate && weekendEndDate && cityWide) {
                 for (let d = new Date(weekendStartDate); d <= weekendEndDate; d.setDate(d.getDate() + 1)) {
@@ -153,15 +221,15 @@ async function fetchEvents() {
                     if (!weekendEvents[key]) {
                         weekendEvents[key] = [];
                     }
-                    
+
                     // Push cityWide event to the corresponding weekend date
                     weekendEvents[key].push({ label: 'cityWide', name: cityWide });
                 }
             }
         });
 
-        console.log('Events:', events);
-        console.log('Weekend Events:', weekendEvents);
+        console.log('Fetched Events:', events);
+        console.log('Fetched Weekend Events:', weekendEvents);
 
         return { events, weekendEvents };
     } catch (error) {
@@ -169,6 +237,7 @@ async function fetchEvents() {
         return { events: {}, weekendEvents: {} };
     }
 }
+
 
 // Event handlers for month navigation
 document.getElementById('prev-month').addEventListener('click', () => {
@@ -189,12 +258,46 @@ document.getElementById('next-month').addEventListener('click', () => {
     updateCalendar();
 });
 
-// Function to update calendar with the current month and year
+// Function to update calendar and table with the current month and year
 function updateCalendar() {
+    console.log('Updating calendar...');
     fetchEvents().then(({ events, weekendEvents }) => {
-        generateCalendar(currentYear, currentMonth, events, weekendEvents);
+        console.log('Container Classes:', document.getElementById('calendar-container').classList);
+
+        if (document.getElementById('calendar-container').classList.contains('show-table')) {
+            console.log('Getting table...');
+            generateTable(events, weekendEvents);
+        } else {
+            generateCalendar(currentYear, currentMonth, events, weekendEvents);
+        }
     });
 }
+
+// Event handler for toggling view
+document.getElementById('toggle-view').addEventListener('click', () => {
+    const calendarView = document.getElementById('calendar-view');
+    const tableView = document.getElementById('table-view');
+    const toggleButton = document.getElementById('toggle-view');
+    const container = document.getElementById('calendar-container');
+
+    console.log('Toggling view');
+    console.log('Calendar view display:', window.getComputedStyle(calendarView).display);
+    console.log('Table view display:', window.getComputedStyle(tableView).display);
+
+    if (container.classList.contains('show-table')) {
+        calendarView.style.display = 'table';
+        tableView.style.display = 'none';
+        toggleButton.textContent = 'Show Table';
+        container.classList.remove('show-table');
+    } else {
+        calendarView.style.display = 'none';
+        tableView.style.display = 'table';
+        toggleButton.textContent = 'Show Calendar';
+        container.classList.add('show-table');
+    }
+
+    updateCalendar();
+});
 
 // Initialize calendar
 updateCalendar();

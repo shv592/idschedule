@@ -13,14 +13,43 @@
     margin-bottom: 5px;
 }
 
+/* Customize the toggle-view button */
+#toggle-view {
+    padding: 5px; /* Adjust padding for a different size */
+    border: 2px solid #002991; /* Orange border */
+    background-color: #fff; /* White background */
+    color: #002991; /* Orange text */
+    font-size: 14px; /* Larger font size */
+    border-radius: 8px; /* Rounded corners */
+    font-weight: bold; /* Bold text */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: all 0.3s ease; /* Smooth transition */
+    width: 110px;
+    
+}
+
+/* Hover state for toggle-view button */
+#toggle-view:hover {
+    background-color: #002991; /* Orange background on hover */
+    color: #fff; /* White text on hover */
+    border-color: #002991; /* Match border color on hover */
+}
+
+/* Active state for toggle-view button */
+#toggle-view:active {
+    transform: scale(0.95); /* Slightly scale down when clicked */
+}
+
+
 .header button {
     padding: 10px 20px;
     border: none;
     background-color: #016d5b;
     color: white;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     border-radius: 5px;
+    width: 100px;
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
@@ -32,6 +61,7 @@
     transform: scale(0.95);
 }
 
+/* Calendar styling */
 .calendar {
     width: 100%;
     border-collapse: collapse;
@@ -44,17 +74,18 @@
     border: 1px solid #ddd;
     vertical-align: top;
     position: relative;
+    width: 100px;
 }
 
 .calendar th {
     background-color: #f4f4f4;
     font-weight: bold;
-    height: 30px;
+    height: 20px;
 }
 
 .calendar td {
+    text-align: left; /* Aligns the text to the left */
     height: 100px;
-    background-color: #fff;
     transition: background-color 0.3s ease;
 }
 
@@ -62,9 +93,12 @@
     background-color: #f0f8ff;
 }
 
-/* Highlight weekends with a lighter grey background */
 .calendar td.weekend {
-    background-color: #f0f0f0; /* Light grey for weekends */
+    background-color: #f3f3f3; /* Light grey for weekends */
+}
+
+.calendar td.weekend:hover {
+    background-color: #f0f8ff;
 }
 
 .event {
@@ -89,12 +123,94 @@
 
 .event.ruhNames::before {
     content: "RUH: ";
+    font-weight: bold;
 }
 
 .event.sphSchNames::before {
     content: "SPH/SCH: ";
+    font-weight: bold;
 }
 
 .event.cityWide::before {
     content: "City Wide: ";
+    font-weight: bold;
 }
+
+.highlight-today {
+    background-color: #ffeb3b!important; /* Highlight color */
+}
+
+/* Show and hide calendar and table views */
+.calendar-view {
+    display: table;
+}
+
+.table-view {
+    display: none;
+}
+
+.calendar-container.show-table .calendar-view {
+    display: none;
+}
+
+.calendar-container.show-table .table-view {
+    display: table;
+}
+
+
+/* Table view styling */
+.table-view {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left; /* Aligns text to the left for better readability */
+    display: none; /* Hidden by default, shown when toggled */
+    margin-top: 20px; /* Space above the table */
+    color: black;
+    font-size: 14px;
+}
+
+.table-view th,
+.table-view td {
+    padding: 10px; /* Increased padding for better readability */
+    border: 1px solid #ddd; /* Light border */
+}
+
+.table-view th {
+    background-color: #f4f4f4; /* Light background for headers */
+    font-weight: bold; /* Bold text for headers */
+    font-size: 16px;
+}
+
+.table-view td {
+}
+
+/* Add hover effect for rows in the table view */
+.table-view tr:hover {
+    background-color: #f0f8ff; /* Light blue background on hover */
+}
+
+/* Highlight weekends in table view */
+.table-view tr.weekend {
+    background-color: #f3f3f3; /* Light grey for weekends */
+}
+
+.table-view tr.weekend:hover {
+    background-color: #f0f8ff; /* Light blue background on hover */
+}
+
+/* Set fixed width for specific columns */
+.table-view th:nth-child(2),
+.table-view td:nth-child(2),
+.table-view th:nth-child(3),
+.table-view td:nth-child(3),
+.table-view th:nth-child(4),
+.table-view td:nth-child(4) {
+    width: 20%; /* Adjust the width as needed */
+}
+
+/* Highlight today's row in table view */
+.table-view tr.highlight-today-row {
+    background-color: #ffeb3b; /* Yellow highlight color */
+    font-weight: bold;
+}
+
