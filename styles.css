@@ -42,7 +42,6 @@
 .calendar td {
     padding: 9px;
     border: 1px solid #ddd;
-    height: 100px;
     vertical-align: top;
     position: relative;
 }
@@ -50,9 +49,11 @@
 .calendar th {
     background-color: #f4f4f4;
     font-weight: bold;
+    height: 30px;
 }
 
 .calendar td {
+    height: 100px;
     background-color: #fff;
     transition: background-color 0.3s ease;
 }
