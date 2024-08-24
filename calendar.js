@@ -88,8 +88,8 @@ function generateCalendar(year, month, events, weekendEvents) {
 // Function to generate the table view
 function generateTable(events, weekendEvents) {
     const tableBody = document.getElementById('table-body');
+    const monthYear = document.getElementById('month-year');
     tableBody.innerHTML = ''; // Clear previous table data
-
     // Collect all keys (dates) and sort them
     const allKeys = Object.keys(events).concat(Object.keys(weekendEvents));
     const sortedKeys = [...new Set(allKeys)].sort();
@@ -101,20 +101,12 @@ function generateTable(events, weekendEvents) {
     sortedKeys.forEach(key => {
         const [year, month, day] = key.split('-').map(Number);
         const date = new Date(year, month - 1, day);
-
-
-
         if (date >= startDate && date <= endDate) {
             const row = document.createElement('tr');
-    
-           
-
             // Highlight today's date (comparing full date)
             if (date.getTime() === today.getTime()) {
                 row.classList.add('highlight-today-row');
             }
-           
-    
             // Add weekend class if the date is a weekend
             if (date.getDay() === 0 || date.getDay() === 6) { // 0 = Sunday, 6 = Saturday
                 row.classList.add('weekend');
@@ -140,11 +132,12 @@ function generateTable(events, weekendEvents) {
             const weekendCell = document.createElement('td');
             weekendCell.textContent = (weekendEvents[key] || []).filter(e => e.label === 'cityWide').map(e => e.name).join(', ');
             row.appendChild(weekendCell);
-
-
             tableBody.appendChild(row);
+
         }
     });
+    monthYear.textContent = `${getMonthName(currentMonth)} ${currentYear}`;
+
 }
 
 // Function to format date as "Day, number Month year"
