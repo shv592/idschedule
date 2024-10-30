@@ -3,9 +3,10 @@ const today = new Date();
 today.setHours(0, 0, 0, 0); // Set the time to 00:00:00 for accurate comparison
 let currentYear = today.getFullYear();
 let currentMonth = today.getMonth(); // 0-based index for months
+let events = {}; // Store events globally
 
 // Function to generate the calendar
-function generateCalendar(year, month, events, weekendEvents) {
+function generateCalendar(year, month) {
     const calendarBody = document.getElementById('calendar-body');
     const monthYear = document.getElementById('month-year');
     calendarBody.innerHTML = ''; // Clear previous calendar
@@ -63,15 +64,6 @@ function generateCalendar(year, month, events, weekendEvents) {
                     }
                 });
             }
-
-            // Display weekend events
-            if (weekendEvents[key]) {
-                weekendEvents[key].forEach(({ label, name }) => {
-                    if (name) {
-                        cell.innerHTML += `<div class="event ${label}">${name}</div>`;
-                    }
-                });
-            }
         }
 
         row.appendChild(cell);
@@ -86,12 +78,13 @@ function generateCalendar(year, month, events, weekendEvents) {
 }
 
 // Function to generate the table view
-function generateTable(events, weekendEvents) {
+function generateTable(events) {
     const tableBody = document.getElementById('table-body');
     const monthYear = document.getElementById('month-year');
     tableBody.innerHTML = ''; // Clear previous table data
+
     // Collect all keys (dates) and sort them
-    const allKeys = Object.keys(events).concat(Object.keys(weekendEvents));
+    const allKeys = Object.keys(events);
     const sortedKeys = [...new Set(allKeys)].sort();
 
     // Filter dates to only include those within the current month
@@ -107,12 +100,11 @@ function generateTable(events, weekendEvents) {
             if (date.getTime() === today.getTime()) {
                 row.classList.add('highlight-today-row');
             }
+
             // Add weekend class if the date is a weekend
             if (date.getDay() === 0 || date.getDay() === 6) { // 0 = Sunday, 6 = Saturday
                 row.classList.add('weekend');
             }
-
-
             // Date Cell
             const dateCell = document.createElement('td');
             dateCell.textContent = formatDate(date); // Format date using the existing formatDate function
@@ -130,14 +122,15 @@ function generateTable(events, weekendEvents) {
 
             // Weekend Events Cell
             const weekendCell = document.createElement('td');
-            weekendCell.textContent = (weekendEvents[key] || []).filter(e => e.label === 'cityWide').map(e => e.name).join(', ');
+            weekendCell.textContent = (events[key] || []).filter(e => e.label === 'cityWide').map(e => e.name).join(', ');
             row.appendChild(weekendCell);
-            tableBody.appendChild(row);
 
+            tableBody.appendChild(row);
         }
     });
-    monthYear.textContent = `${getMonthName(currentMonth)} ${currentYear}`;
 
+    // Update month and year display
+    monthYear.textContent = `${getMonthName(currentMonth)} ${currentYear}`;
 }
 
 // Function to format date as "Day, number Month year"
@@ -162,75 +155,47 @@ function getMonthName(monthIndex) {
 async function fetchEvents() {
     console.log('Fetching events...');
     try {
-        const response = await fetch('https://docs.google.com/spreadsheets/d/1k-j85Yo2CBqX21myqZJKjnbsPs3ovmUATkhDlLICzNQ/pub?gid=68209812&single=true&output=csv');
+        const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vT8btU5R59fwA8BBsqKlvvT8TQu87YnIlscMjW6QhD5pF7FqUQ73SVjRe7AARUm04nuQieJ-hC0h_DO/pub?gid=76654142&single=true&output=csv');
         const text = await response.text();
         const rows = text.split('\n').map(row => row.split(','));
 
-        const events = {};
-        const weekendEvents = {};
+        const eventsData = {};
 
         rows.slice(1).forEach(row => {
             console.log('Processing row:', row);
 
             // Extract relevant columns
-            const [startDateStr, endDateStr, ruhNames, sphSchNames, weekendStartDateStr, weekendEndDateStr, cityWide] = row.slice(0, 7);
+            const [eventDateStr, ruhNames, sphSchNames, cityWide] = row.slice(0, 4);
+            const eventDate = new Date(eventDateStr);
+            eventDate.setHours(0, 0, 0, 0); // Set time to 00:00:00 for accurate comparison
 
-            // Convert strings to dates and set time to 00:00:00
-            const startDate = new Date(startDateStr);
-            startDate.setHours(0, 0, 0, 0);
-            const endDate = new Date(endDateStr);
-            endDate.setHours(0, 0, 0, 0);
+            // Convert to key format
+            const key = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}-${String(eventDate.getDate()).padStart(2, '0')}`;
 
-            // Handle weekday events (startDate to endDate)
-            if (startDate && endDate) {
-                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-                    if (!events[key]) {
-                        events[key] = [];
-                    }
-
-                    // Push ruhNames and sphSchNames to the corresponding date
-                    if (ruhNames) {
-                        events[key].push({ label: 'ruhNames', name: ruhNames });
-                    }
-                    if (sphSchNames) {
-                        events[key].push({ label: 'sphSchNames', name: sphSchNames });
-                    }
-                }
+            if (!eventsData[key]) {
+                eventsData[key] = [];
             }
 
-            // Convert strings to dates and set time to 00:00:00
-            const weekendStartDate = new Date(weekendStartDateStr);
-            weekendStartDate.setHours(0, 0, 0, 0);
-            const weekendEndDate = new Date(weekendEndDateStr);
-            weekendEndDate.setHours(0, 0, 0, 0);
-
-            // Handle weekend events (weekendStartDate to weekendEndDate)
-            if (weekendStartDate && weekendEndDate && cityWide) {
-                for (let d = new Date(weekendStartDate); d <= weekendEndDate; d.setDate(d.getDate() + 1)) {
-                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-                    if (!weekendEvents[key]) {
-                        weekendEvents[key] = [];
-                    }
-
-                    // Push cityWide event to the corresponding weekend date
-                    weekendEvents[key].push({ label: 'cityWide', name: cityWide });
-                }
+            // Push names to the corresponding date
+            if (ruhNames) {
+                eventsData[key].push({ label: 'ruhNames', name: ruhNames });
+            }
+            if (sphSchNames) {
+                eventsData[key].push({ label: 'sphSchNames', name: sphSchNames });
+            }
+            if (cityWide) {
+                eventsData[key].push({ label: 'cityWide', name: cityWide });
             }
         });
 
-        console.log('Fetched Events:', events);
-        console.log('Fetched Weekend Events:', weekendEvents);
+        console.log('Fetched Events:', eventsData);
+        events = eventsData; // Store globally
+        return { events };
 
-        return { events, weekendEvents };
     } catch (error) {
         console.error('Error fetching data:', error);
-        return { events: {}, weekendEvents: {} };
     }
 }
-
 
 // Event handlers for month navigation
 document.getElementById('prev-month').addEventListener('click', () => {
@@ -251,46 +216,27 @@ document.getElementById('next-month').addEventListener('click', () => {
     updateCalendar();
 });
 
-// Function to update calendar and table with the current month and year
-function updateCalendar() {
-    console.log('Updating calendar...');
-    fetchEvents().then(({ events, weekendEvents }) => {
-        console.log('Container Classes:', document.getElementById('calendar-container').classList);
-
-        if (document.getElementById('calendar-container').classList.contains('show-table')) {
-            console.log('Getting table...');
-            generateTable(events, weekendEvents);
-        } else {
-            generateCalendar(currentYear, currentMonth, events, weekendEvents);
-        }
-    });
+// Function to update calendar and table view
+async function updateCalendar() {
+    await fetchEvents(); // Fetch events from Google Sheets
+    generateCalendar(currentYear, currentMonth); // Update calendar display
+    generateTable(events); // Update table display
 }
 
-// Event handler for toggling view
-document.getElementById('toggle-view').addEventListener('click', () => {
+// Toggle view function
+document.getElementById('toggle-view').addEventListener('click', function() {
     const calendarView = document.getElementById('calendar-view');
     const tableView = document.getElementById('table-view');
-    const toggleButton = document.getElementById('toggle-view');
-    const container = document.getElementById('calendar-container');
-
-    console.log('Toggling view');
-    console.log('Calendar view display:', window.getComputedStyle(calendarView).display);
-    console.log('Table view display:', window.getComputedStyle(tableView).display);
-
-    if (container.classList.contains('show-table')) {
-        calendarView.style.display = 'table';
+    if (calendarView.style.display === 'none') {
+        calendarView.style.display = 'block';
         tableView.style.display = 'none';
-        toggleButton.textContent = 'Show Table';
-        container.classList.remove('show-table');
+        updateCalendar(); // Generate calendar when switched to calendar view
     } else {
         calendarView.style.display = 'none';
-        tableView.style.display = 'table';
-        toggleButton.textContent = 'Show Calendar';
-        container.classList.add('show-table');
+        tableView.style.display = 'block';
+        generateTable(events); // Generate table when switched to table view
     }
-
-    updateCalendar();
 });
 
-// Initialize calendar
+// Initial call to fetch events and generate calendar
 updateCalendar();
